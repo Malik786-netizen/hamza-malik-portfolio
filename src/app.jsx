@@ -85,7 +85,7 @@ function Hero() {
   const copyY = useTransform(scrollYProgress, [0, 1], [0, -55]);
   return <section id="home" className="hero" ref={ref}>
     <div className="hero-top"><span>3D & GRAPHICS DESIGNER<br/><span className="muted">VISUAL DESIGNER</span></span><span className="availability"><i />AVAILABLE FOR COLLABORATION</span></div>
-    <motion.div className="hero-title display" aria-hidden="true" style={enabled ? { y: titleY } : {}} initial={enabled ? { clipPath: 'inset(0 0 100% 0)' } : false} animate={{ clipPath: 'inset(0 0 0% 0)' }} transition={{ duration: 1.4, ease: EASE }}>THE SERIES</motion.div>
+    <motion.div className="hero-title display" aria-hidden="true" style={enabled ? { y: titleY } : {}} initial={enabled ? { clipPath: 'inset(0 0 100% 0)' } : false} animate={{ clipPath: 'inset(0 0 0% 0)' }} transition={{ duration: 1.4, ease: EASE }}>PORTFOLIO</motion.div>
     <motion.div className="hero-portrait" style={enabled ? { y: portraitY, scale: portraitScale } : {}} initial={enabled ? { opacity: 0 } : false} animate={{ opacity: 1 }} transition={{ duration: 1.2, delay: 0.2 }}><img src="./Asset/img/hamza-cutout.png" alt="Hamza wearing a black suit and glasses" width="1136" height="1402" fetchPriority="high" /></motion.div>
     <motion.div className="hero-intro" style={enabled ? { y: copyY } : {}} initial={enabled ? { opacity: 0, x: -35 } : false} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.9, delay: 0.35, ease: EASE }}>
       <p className="handwriting">Hello, I’m</p><h1 className="display">HAMZA<span>.</span></h1><p className="hero-role">3D & GRAPHICS<br />DESIGNER</p><p className="hero-description">Graphic design, 2D and 3D design.<br />Bringing ideas to life with creative software and Blender.</p>
@@ -181,7 +181,6 @@ const processSteps = [
   ['05', 'SOFTWARE', 'AutoCAD, Microsoft Office and SketchUp.'],
 ];
 function Breakdown() {
-  const scene = featured.find(p => p.type === 'render');
   const ref = useRef(null);
   const enabled = useContext(MotionContext);
   const [manual, setManual] = useState(false);
@@ -189,9 +188,7 @@ function Breakdown() {
   const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
   useMotionValueEvent(scrollYProgress, 'change', v => { if (!manual && enabled) setCut(Math.round(90 - v * 80)); });
   const titleX = useTransform(scrollYProgress, [0, 1], [30, -30]);
-  if (!scene) return null;
-  const resize = url => url.replace('/upload/', '/upload/c_scale,w_1200,q_auto,f_auto/');
-  return <section className="breakdown section-wrap" ref={ref} aria-labelledby="breakdown-title"><Reveal className="breakdown-copy"><span className="eyebrow">A LOOK UNDER THE SURFACE</span><motion.h2 id="breakdown-title" className="display" style={enabled ? { x: titleX } : {}}>FROM RAW.<br/><span className="accent">TO REAL.</span></motion.h2><p>Satu scene. Berlapis proses.<br/>Lihat bagaimana sebuah 3D environment berubah dari bentuk dasar menjadi dunia yang hidup.</p><span className="breakdown-credit">CYBERPUNK ENVIRONMENT / 2025<br/>3D ARTIST · LIGHTING · RENDERING</span></Reveal><Reveal className="comparison"><div className="comparison-stage" style={{'--cut': `${enabled || manual ? cut : 50}%`}}><MediaImage src={resize(scene.renders[0].solid)} alt="Cyberpunk environment sebelum material dan pencahayaan"/><div className="comparison-final"><MediaImage src={resize(scene.renders[0].final)} alt="Cyberpunk environment hasil render akhir"/></div><span className="comparison-label raw-label">SOLID VIEW</span><span className="comparison-label final-label">FINAL RENDER</span><div className="comparison-divider"><span><ChevronLeft size={14}/><ChevronRight size={14}/></span></div><input aria-label="Perbandingan sebelum dan sesudah render" aria-valuetext={`${cut}% solid, ${100-cut}% final render`} type="range" min="0" max="100" value={cut} onChange={e => { setManual(true); setCut(Number(e.target.value)); }}/></div><div className="comparison-caption"><span>GESER UNTUK MELIHAT PROSESNYA</span><span>DRAG / SCROLL</span></div></Reveal></section>;
+  return <section className="breakdown section-wrap" ref={ref} aria-labelledby="breakdown-title"><Reveal className="breakdown-copy"><span className="eyebrow">ONE PROJECT / TWO VIEWS</span><motion.h2 id="breakdown-title" className="display" style={enabled ? { x: titleX } : {}}>FROM ABOVE.<br/><span className="accent">INTO THE SPACE.</span></motion.h2><p>Explore the Exhibition Booth Design from a top-down view to its finished perspective. Drag the divider to compare the layout and final presentation.</p><a className="breakdown-credit" href="https://www.behance.net/gallery/247057999/Exhibition-Booth-Design" target="_blank" rel="noopener noreferrer">EXHIBITION BOOTH DESIGN / 2026<br/>3D MODELING · VISUALIZATION · VIEW ON BEHANCE <ArrowUpRight size={12}/></a></Reveal><Reveal className="comparison"><div className="comparison-stage" style={{'--cut': `${enabled || manual ? cut : 50}%`}}><MediaImage src="./Asset/img/exhibition-booth-overhead.png" alt="Top-down render of Hamza’s Exhibition Booth Design"/><div className="comparison-final"><MediaImage src="./Asset/img/exhibition-booth-render.png" alt="Finished perspective render of Hamza’s Exhibition Booth Design"/></div><span className="comparison-label raw-label">OVERHEAD VIEW</span><span className="comparison-label final-label">FINAL PERSPECTIVE</span><div className="comparison-divider"><span><ChevronLeft size={14}/><ChevronRight size={14}/></span></div><input aria-label="Compare the overhead and final perspective views" aria-valuetext={`${cut}% overhead view, ${100-cut}% final perspective`} type="range" min="0" max="100" value={cut} onChange={e => { setManual(true); setCut(Number(e.target.value)); }}/></div><div className="comparison-caption"><span>DRAG TO EXPLORE THE PROJECT</span><span>INTERACTIVE RENDER</span></div></Reveal></section>;
 }
 function About() {
   const enabled = useContext(MotionContext);
@@ -304,6 +301,7 @@ function App() {
       <main>
         <Hero/>
         <Portfolio onProject={setProject}/>
+        <Breakdown/>
         <PrintServices/>
         <About/>
         <Journey/>
