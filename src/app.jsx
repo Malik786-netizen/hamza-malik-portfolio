@@ -85,7 +85,7 @@ function Hero() {
   const copyY = useTransform(scrollYProgress, [0, 1], [0, -55]);
   return <section id="home" className="hero" ref={ref}>
     <div className="hero-top"><span>3D & GRAPHICS DESIGNER<br/><span className="muted">VISUAL DESIGNER</span></span><span className="availability"><i />AVAILABLE FOR COLLABORATION</span></div>
-    <motion.div className="hero-title display" aria-hidden="true" style={enabled ? { y: titleY } : {}} initial={enabled ? { clipPath: 'inset(0 0 100% 0)' } : false} animate={{ clipPath: 'inset(0 0 0% 0)' }} transition={{ duration: 1.4, ease: EASE }}>PORTFOLIO</motion.div>
+    <motion.div className="hero-title display" aria-hidden="true" style={enabled ? { y: titleY } : {}} initial={enabled ? { clipPath: 'inset(0 0 100% 0)' } : false} animate={{ clipPath: 'inset(0 0 0% 0)' }} transition={{ duration: 1.4, ease: EASE }}>THE SERIES</motion.div>
     <motion.div className="hero-portrait" style={enabled ? { y: portraitY, scale: portraitScale } : {}} initial={enabled ? { opacity: 0 } : false} animate={{ opacity: 1 }} transition={{ duration: 1.2, delay: 0.2 }}><img src="./Asset/img/hamza-cutout.png" alt="Hamza wearing a black suit and glasses" width="1136" height="1402" fetchPriority="high" /></motion.div>
     <motion.div className="hero-intro" style={enabled ? { y: copyY } : {}} initial={enabled ? { opacity: 0, x: -35 } : false} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.9, delay: 0.35, ease: EASE }}>
       <p className="handwriting">Hello, I’m</p><h1 className="display">HAMZA<span>.</span></h1><p className="hero-role">3D & GRAPHICS<br />DESIGNER</p><p className="hero-description">Graphic design, 2D and 3D design.<br />Bringing ideas to life with creative software and Blender.</p>
@@ -147,7 +147,7 @@ function Portfolio({ onProject }) {
   const results = archive.filter(p => (category === 'All' || p.category === category) && `${p.title} ${p.category} ${p.role}`.toLowerCase().includes(query.toLowerCase()));
   const projects = expanded || category !== 'All' || query ? results.slice(0, limit) : featured;
   return <section id="portfolio" className="portfolio section-wrap">
-    <Reveal className="section-heading"><div><span className="eyebrow">01 / PORTFOLIO</span><h2>DESIGN WORK<span className="accent">.</span></h2></div><button className="text-link" onClick={() => { if (expanded) { setExpanded(false); setCategory('All'); setQuery(''); } else { setExpanded(true); setLimit(9); } }}>{expanded ? 'FEATURED WORK' : 'ALL WORK'}<ArrowRight size={21}/></button></Reveal>
+    <Reveal className="section-heading"><div><span className="eyebrow">SEASON 01 / THE ORIGINALS</span><h2>HAMZA ORIGINALS<span className="accent">.</span></h2></div><button className="text-link" onClick={() => { if (expanded) { setExpanded(false); setCategory('All'); setQuery(''); } else { setExpanded(true); setLimit(9); } }}>{expanded ? 'FEATURED WORK' : 'ALL WORK'}<ArrowRight size={21}/></button></Reveal>
     <Reveal className="portfolio-toolbar">
       <div className="filters" role="group" aria-label="Work categories">
         {categories.map(c => <button key={c} className={category === c ? 'selected' : ''} aria-pressed={category === c} onClick={() => { setCategory(c); setExpanded(true); setLimit(9); }}>{c}{c === category && <motion.span className="filter-line" layoutId="filter-line"/>}</button>)}
@@ -210,7 +210,7 @@ function About() {
 function Journey() {
   const [open, setOpen] = useState(0);
   return <section id="experience" className="journey section-wrap">
-    <Reveal className="section-heading"><div><span className="eyebrow">03 / EXPERIENCE</span><h2>DESIGNING. BUILDING. <span className="accent">GROWING.</span></h2></div><a className="text-link" href="./Asset/cv/Hamza-Resume.pdf" download>RESUME<Download size={16}/></a></Reveal>
+    <Reveal className="section-heading"><div><span className="eyebrow">SEASON 02 / THE JOURNEY</span><h2>MY STORY SO FAR<span className="accent">.</span></h2></div><a className="text-link" href="./Asset/cv/Hamza-Resume.pdf" download>RESUME<Download size={16}/></a></Reveal>
     <div className="journey-grid"><div className="experience-list">{experiences.map((job, i) => <Reveal className={`experience-row ${open === i ? 'is-open' : ''}`} key={job.place}><button aria-expanded={open === i} aria-controls={`job-${i}`} onClick={() => setOpen(open === i ? null : i)}><span className="experience-date">{job.date}</span><span><h3>{job.title}</h3><span className="experience-place">{job.place}</span></span>{open === i ? <Minus size={18}/> : <Plus size={18}/>}</button><AnimatePresence initial={false}>{open === i && <motion.div id={`job-${i}`} initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.35, ease: EASE }}><p>{job.text}</p></motion.div>}</AnimatePresence></Reveal>)}</div>
       <Reveal className="awards-panel"><p className="eyebrow">LANGUAGES</p><h3 className="display">ENGLISH.<br/><span className="accent">URDU. ARABIC.</span></h3><div className="award-list">{languages.map((language, i) => <div className="education-row" key={language}><strong>{String(i + 1).padStart(2, '0')} · {language}</strong></div>)}</div></Reveal></div>
   </section>;
@@ -287,8 +287,9 @@ function ProjectDialog({ project, onClose }) {
 
 function App() {
   const reduced = useReducedMotion();
-  const [motionOn, setMotionOn] = useState(() => { try { return localStorage.getItem('hamza-motion') !== 'off'; } catch { return true; } });
-  const enabled = motionOn && !reduced;
+  const [motionOn, setMotionOn] = useState(() => { try { const preference = localStorage.getItem('hamza-motion'); return preference === null ? !reduced : preference === 'on'; } catch { return !reduced; } });
+  // Respect reduced-motion by default, while allowing an explicit user opt-in.
+  const enabled = motionOn;
   const [project, setProject] = useState(null);
   const { scrollYProgress } = useScroll();
   const progress = useSpring(scrollYProgress, { stiffness: 100, damping: 28, restDelta: 0.001 });
@@ -296,7 +297,7 @@ function App() {
   const toggle = () => { setMotionOn(!motionOn); try { localStorage.setItem('hamza-motion', motionOn ? 'off' : 'on'); } catch {} };
   const close = React.useCallback(() => setProject(null), []);
   return <MotionContext.Provider value={enabled}>
-    <MotionConfig reducedMotion={enabled ? 'user' : 'always'} transition={{ ease: EASE }}>
+    <MotionConfig reducedMotion={enabled ? 'never' : 'always'} transition={{ ease: EASE }}>
       <a className="skip-link" href="#portfolio">Skip to work</a>
       <motion.div className="reading-progress" style={{ scaleX: enabled ? progress : scrollYProgress }}/>
       <Header enabled={enabled} onToggle={toggle}/>
