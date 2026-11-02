@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useContext, createContext } from 'react';
 import { createRoot } from 'react-dom/client';
 import { motion, AnimatePresence, MotionConfig, useScroll, useTransform, useSpring, useReducedMotion, useMotionValueEvent, useAnimationFrame, useInView } from 'framer-motion';
-import { ArrowUpRight, ArrowDown, ArrowRight, Play, X, Menu, Mail, Phone, MapPin, Instagram, Youtube, Download, Pause, Search, Plus, Minus, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+import { ArrowUpRight, ArrowDown, ArrowRight, Play, X, Menu, Mail, Phone, MapPin, Instagram, Youtube, Download, Pause, Search, Plus, Minus, ChevronLeft, ChevronRight, ExternalLink, Gift, Tags } from 'lucide-react';
 import archive from './data/projects.json';
 import brands from './data/brands.json';
 import './styles.css';
@@ -161,6 +161,18 @@ function Portfolio({ onProject }) {
   </section>;
 }
 
+function PrintServices() {
+  const services = [
+    { number: '01', title: 'PRINTED GIFT ITEMS', icon: Gift, text: 'Add a personal touch to gifts with custom printing for keepsakes and special occasions.', tags: ['Personalised gifts', 'Gift packaging', 'Special occasions'] },
+    { number: '02', title: 'CUSTOM STICKERS', icon: Tags, text: 'Custom-printed stickers for product labels, packaging, promotions and events.', tags: ['Product labels', 'Packaging', 'Promotions'] },
+  ];
+  return <section id="print-services" className="print-services section-wrap">
+    <Reveal className="section-heading"><div><span className="eyebrow">02 / PRINT SERVICES</span><h2>DESIGNED TO <span className="accent">PRINT.</span></h2></div><span className="print-heading-note">GIFT ITEMS / CUSTOM STICKERS</span></Reveal>
+    <Reveal className="print-intro"><p>Turn thoughtful ideas into tangible pieces with custom printing for gift items and stickers.</p></Reveal>
+    <div className="print-grid">{services.map(({ number, title, icon: Icon, text, tags }) => <Reveal className="print-card" key={title}><div className="print-card-top"><span className="print-card-number display">{number}</span><span className="print-card-icon"><Icon size={23} strokeWidth={1.5}/></span></div><h3>{title}</h3><p>{text}</p><div className="print-tags">{tags.map(tag => <span key={tag}>{tag}</span>)}</div></Reveal>)}</div>
+  </section>;
+}
+
 const processSteps = [
   ['01', 'GRAPHIC DESIGN', 'Graphic design and expertise in design software.'],
   ['02', 'ADOBE SOFTWARE', 'Adobe Illustrator, Photoshop and After Effects.'],
@@ -291,6 +303,7 @@ function App() {
       <main>
         <Hero/>
         <Portfolio onProject={setProject}/>
+        <PrintServices/>
         <About/>
         <Journey/>
         <Contact/>
