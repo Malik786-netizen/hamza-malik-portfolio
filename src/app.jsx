@@ -1,0 +1,312 @@
+import React, { useState, useEffect, useRef, useContext, createContext } from 'react';
+import { createRoot } from 'react-dom/client';
+import { motion, AnimatePresence, MotionConfig, useScroll, useTransform, useSpring, useReducedMotion, useMotionValueEvent, useAnimationFrame, useInView } from 'framer-motion';
+import { ArrowUpRight, ArrowDown, ArrowRight, Play, X, Menu, Mail, Phone, MapPin, Instagram, Youtube, Download, Pause, Search, Plus, Minus, ChevronLeft, ChevronRight, ExternalLink } from 'lucide-react';
+import archive from './data/projects.json';
+import brands from './data/brands.json';
+import './styles.css';
+
+const MotionContext = createContext(true);
+const EASE = [0.22, 1, 0.36, 1];
+const categories = ['All'];
+const featured = archive.slice(0, 6);
+const experiences = [
+  { date: '2021 – 2022', title: 'Graphics Designer', place: 'Saif Design', text: 'Worked at Saif Design for one year.' },
+  { date: '2022 – 2024', title: '3D & Graphics Designer', place: 'Light Lines LLC', text: 'Worked at Light Lines LLC for two years.' },
+  { date: '2024 – ONGOING', title: '3D & Graphics Designer', place: 'Wonderful Graphics', text: 'Working at Wonderful Graphics since 2024.' },
+];
+const languages = ['English', 'Urdu', 'Arabic'];
+const portfolioUrl = 'https://www.behance.net/Hamza_Malik';
+const emailAddress = 'mmalik.hamxa.786@gmail.com';
+const phoneNumber = '+96894978767';
+const postalAddress = 'P.O. Box 2595, PC 112, Ruwi, Sultanate of Oman';
+
+function Reveal({ children, className = '', delay = 0, as = 'div' }) {
+  const enabled = useContext(MotionContext);
+  const Component = motion[as];
+  return <Component className={className} initial={enabled ? { opacity: 0, y: 32 } : false} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false, amount: 0.12 }} transition={{ duration: enabled ? 0.75 : 0, delay, ease: EASE }}>{children}</Component>;
+}
+
+function MediaImage({ src, alt, className = '', priority = false, ...props }) {
+  const [state, setState] = useState('loading');
+  const imgRef = useRef(null);
+  useEffect(() => {
+    const img = imgRef.current;
+    // Cached images can finish before React attaches onLoad.
+    setState(img?.complete ? (img.naturalWidth ? 'loaded' : 'error') : 'loading');
+  }, [src]);
+  return <span className={`media-image ${state} ${className}`}>
+    {state === 'error' && <span className="image-fallback"><span className="display">H.</span><span>Preview not available</span></span>}
+    <img ref={imgRef} src={src} alt={alt} loading={priority ? 'eager' : 'lazy'} fetchPriority={priority ? 'high' : 'auto'} width="960" height="600" onLoad={() => setState('loaded')} onError={e => {
+      if (e.currentTarget.src.includes('maxresdefault.jpg')) e.currentTarget.src = e.currentTarget.src.replace('maxresdefault.jpg', 'hqdefault.jpg');
+      else setState('error');
+    }} {...props} />
+  </span>;
+}
+
+function Magnetic({ children, className = '', ...props }) {
+  const enabled = useContext(MotionContext);
+  const x = useSpring(0, { stiffness: 220, damping: 20 });
+  const y = useSpring(0, { stiffness: 220, damping: 20 });
+  return <motion.a className={className} style={{ x, y }} onPointerMove={e => {
+    if (!enabled || e.pointerType !== 'mouse') return;
+    const r = e.currentTarget.getBoundingClientRect();
+    x.set((e.clientX - r.left - r.width / 2) * 0.12); y.set((e.clientY - r.top - r.height / 2) * 0.2);
+  }} onPointerLeave={() => { x.set(0); y.set(0); }} {...props}>{children}</motion.a>;
+}
+
+function Header({ enabled, onToggle }) {
+  const [open, setOpen] = useState(false);
+  const [active, setActive] = useState('home');
+  useEffect(() => {
+    const observer = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) setActive(e.target.id); }), { rootMargin: '-15% 0px -65% 0px' });
+    document.querySelectorAll('main > section[id]').forEach(el => observer.observe(el));
+    return () => observer.disconnect();
+  }, []);
+  useEffect(() => {
+    const onKey = e => { if (e.key === 'Escape') setOpen(false); };
+    window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey);
+  }, []);
+  return <header className="site-header">
+    <a className="wordmark" href="#home" aria-label="Hamza, home">HAMZA</a>
+    <nav className="desktop-nav" aria-label="Main navigation">{[['portfolio', 'Work'], ['about', 'About'], ['experience', 'Experience'], ['contact', 'Contact']].map(([id, label]) => <a key={id} href={`#${id}`} className={active === id ? 'active' : ''}>{label}</a>)}</nav>
+    <div className="header-actions"><button className="motion-toggle" onClick={onToggle} aria-label={enabled ? 'Jeda animasi' : 'Aktifkan animasi'} aria-pressed={!enabled}>{enabled ? <Pause size={13} /> : <Play size={13} />}<span>Motion {enabled ? 'on' : 'off'}</span></button><a className="header-contact" href="#contact">Let’s talk <ArrowUpRight size={16} /></a><button className="menu-toggle icon-button" onClick={() => setOpen(!open)} aria-expanded={open} aria-controls="mobile-menu" aria-label={open ? 'Tutup menu' : 'Buka menu'}>{open ? <X /> : <Menu />}</button></div>
+    <AnimatePresence>{open && <motion.nav id="mobile-menu" className="mobile-menu" aria-label="Navigasi mobile" initial={{ opacity: 0, y: -12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}>{[['home', 'Home'], ['portfolio', 'Work'], ['about', 'About'], ['experience', 'Experience'], ['contact', 'Contact']].map(([id, label], i) => <a key={id} href={`#${id}`} onClick={() => setOpen(false)}><span>0{i + 1}</span>{label}<ArrowUpRight size={18} /></a>)}</motion.nav>}</AnimatePresence>
+  </header>;
+}
+
+function Hero() {
+  const ref = useRef(null);
+  const enabled = useContext(MotionContext);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start start', 'end start'] });
+  const titleY = useTransform(scrollYProgress, [0, 1], [0, 180]);
+  const portraitY = useTransform(scrollYProgress, [0, 1], [0, 85]);
+  const portraitScale = useTransform(scrollYProgress, [0, 1], [1, 1.08]);
+  const copyY = useTransform(scrollYProgress, [0, 1], [0, -55]);
+  return <section id="home" className="hero" ref={ref}>
+    <div className="hero-top"><span>3D & GRAPHICS DESIGNER<br/><span className="muted">VISUAL DESIGNER</span></span><span className="availability"><i />AVAILABLE FOR COLLABORATION</span></div>
+    <motion.div className="hero-title display" aria-hidden="true" style={enabled ? { y: titleY } : {}} initial={enabled ? { clipPath: 'inset(0 0 100% 0)' } : false} animate={{ clipPath: 'inset(0 0 0% 0)' }} transition={{ duration: 1.4, ease: EASE }}>PORTFOLIO</motion.div>
+    <motion.div className="hero-portrait" style={enabled ? { y: portraitY, scale: portraitScale } : {}} initial={enabled ? { opacity: 0 } : false} animate={{ opacity: 1 }} transition={{ duration: 1.2, delay: 0.2 }}><img src="./Asset/img/hamza-cutout.png" alt="Hamza wearing a black suit and glasses" width="1136" height="1402" fetchPriority="high" /></motion.div>
+    <motion.div className="hero-intro" style={enabled ? { y: copyY } : {}} initial={enabled ? { opacity: 0, x: -35 } : false} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.9, delay: 0.35, ease: EASE }}>
+      <p className="handwriting">Hello, I’m</p><h1 className="display">HAMZA<span>.</span></h1><p className="hero-role">3D & GRAPHICS<br />DESIGNER</p><p className="hero-description">Graphic design, 2D and 3D design.<br />Bringing ideas to life with creative software and Blender.</p>
+      <Magnetic href="#portfolio" className="primary-link">Explore my work <ArrowDown size={17}/></Magnetic>
+      <span className="hero-location"><MapPin size={12} /> RUWI, OMAN</span>
+    </motion.div>
+    <motion.div className="hero-side" initial={enabled ? { opacity: 0, x: 30 } : false} animate={{ opacity: 1, x: 0 }} transition={{ duration: 1, delay: 0.55, ease: EASE }}>
+      <div className="hero-manifesto"><span className="crosshair" aria-hidden="true">✳</span><p>Every design.<br />A different idea.</p></div>
+      <div className="hero-stats"><div><span className="display">3</span><p>DESIGN<br/>COMPANIES</p></div><div><span className="display">7</span><p>DESIGN<br/>SOFTWARE TOOLS</p></div><div className="hero-award-stat"><span className="display">3</span><span>LANGUAGES</span></div><a href="./Asset/cv/Hamza-Resume.pdf" download><Download size={16}/><span>DOWNLOAD RESUME</span></a></div>
+    </motion.div>
+    <div className="hero-bottom"><a className="reel-button" href={portfolioUrl} target="_blank" rel="noopener noreferrer"><span className="play-circle"><ExternalLink size={12}/></span>VIEW BEHANCE PORTFOLIO<span className="muted">3D / GRAPHIC DESIGN</span></a><span className="hero-scroll">SCROLL TO DISCOVER <ArrowDown size={13}/></span><span className="edition">DESIGN / 3D / GRAPHICS</span></div>
+  </section>;
+}
+
+function ProjectCard({ project, index, onOpen }) {
+  const enabled = useContext(MotionContext);
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
+  const y = useTransform(scrollYProgress, [0, 1], [-12, 12]);
+  const video = ['youtube', 'drive'].includes(project.type);
+  return <motion.article ref={ref} className="project-card" layout initial={enabled ? { opacity: 0, y: 32 } : false} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: false, amount: 0.08 }} transition={{ duration: enabled ? 0.6 : 0, delay: (index % 3) * 0.06, ease: EASE }} exit={{ opacity: 0, scale: 0.96 }}>
+    {project.embed ? <a className="project-open project-embed" href={project.url} target="_blank" rel="noopener noreferrer" aria-label={`Open ${project.title} on Behance`}><iframe src={project.embed} title={`${project.title} — Behance project`} loading="lazy" scrolling="no" allowFullScreen/><span className="project-type">PROJECT ON BEHANCE</span><span className="project-frame" aria-hidden="true" /></a> : <button className="project-open" onClick={() => onOpen(project)} aria-label={`Lihat ${project.title}`}><motion.div className="project-picture" style={enabled ? { y } : {}}><MediaImage src={project.image} alt={project.title}/></motion.div><span className="project-type">{project.type === 'render' ? '3D BREAKDOWN' : video ? 'FILM / VIDEO' : project.type === 'website' ? 'WEBSITE' : 'STILL / IMAGE'}</span><span className="project-hover">{video ? <Play fill="currentColor" size={18}/> : <ArrowUpRight size={22}/>}</span><span className="project-frame" aria-hidden="true" /></button>}
+    {project.embed ? <a className="project-caption" href={project.url} target="_blank" rel="noopener noreferrer"><span className="project-number display">{String(index + 1).padStart(2, '0')}</span><span><h3>{project.title}</h3><span className="project-category">{project.category}{project.year ? ` / ${project.year}` : ''}</span></span><ArrowUpRight size={20}/></a> : <button className="project-caption" onClick={() => onOpen(project)}><span className="project-number display">{String(index + 1).padStart(2, '0')}</span><span><h3>{project.title}</h3><span className="project-category">{project.category}{project.year ? ` / ${project.year}` : ''}</span></span><ArrowUpRight size={20}/></button>}
+  </motion.article>;
+}
+
+function BrandStrip() {
+  const enabled = useContext(MotionContext);
+  const ref = useRef(null);
+  const loopWidth = useRef(0);
+  const inView = useInView(ref);
+  const [paused, setPaused] = useState(false);
+  const [interacting, setInteracting] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+  useEffect(() => {
+    if (!ref.current || showAll) return;
+    const update = () => { loopWidth.current = ref.current?.querySelector('.brand-set')?.getBoundingClientRect().width || 0; };
+    const observer = new ResizeObserver(update);
+    observer.observe(ref.current); update();
+    return () => observer.disconnect();
+  }, [showAll]);
+  useAnimationFrame((time, delta) => {
+    if (!enabled || paused || interacting || !inView || showAll || !ref.current || !loopWidth.current) return;
+    const el = ref.current;
+    el.scrollLeft += Math.min(delta, 40) * 0.038;
+    if (el.scrollLeft >= loopWidth.current) el.scrollLeft -= loopWidth.current;
+  });
+  const move = direction => { setPaused(true); ref.current?.scrollBy({ left: direction * ref.current.clientWidth * .7, behavior: enabled ? 'smooth' : 'instant' }); };
+  return <Reveal className="brand-section"><div className="brand-heading"><p>BEEN PART OF<br/><strong>THE BIGGER PICTURE.</strong></p><div><button className="brand-all" onClick={() => setShowAll(v => !v)} aria-expanded={showAll} aria-controls="brand-collection">{showAll ? 'TAMPILKAN DERET' : `LIHAT SEMUA (${brands.length})`}{showAll ? <Minus size={14}/> : <Plus size={14}/>}</button>{!showAll && <><button className="icon-button brand-pause" aria-label={paused ? 'Putar animasi logo' : 'Jeda animasi logo'} aria-pressed={paused} onClick={() => setPaused(v => !v)}>{paused ? <Play size={13}/> : <Pause size={13}/>}</button><button className="icon-button" onClick={() => move(-1)} aria-label="Logo sebelumnya"><ChevronLeft size={17}/></button><button className="icon-button" onClick={() => move(1)} aria-label="Logo selanjutnya"><ChevronRight size={17}/></button></>}</div></div><div id="brand-collection" className={showAll ? 'brand-full-grid' : 'brand-viewport'} ref={ref} onPointerEnter={e => { if(e.pointerType==='mouse') setInteracting(true); }} onPointerLeave={() => setInteracting(false)} onPointerDown={() => setPaused(true)} onFocusCapture={() => setInteracting(true)} onBlurCapture={e => { if (!e.currentTarget.contains(e.relatedTarget)) setInteracting(false); }} tabIndex={showAll ? undefined : 0} role={showAll ? 'list' : 'region'} aria-label="Logo brand dan institusi, geser untuk melihat semuanya">
+      {showAll ? brands.map(b => <div className="brand-logo" key={b.file} role="listitem"><img src={`./Asset/svg/brand/${b.file}`} alt={b.name} title={b.name} width="150" height="60" loading="lazy"/><span>{b.name}</span></div>) : <div className="brand-rail">{[0,1].map(copy => <div className="brand-set" key={copy} aria-hidden={copy === 1 ? true : undefined}>{brands.map(b => <div className="brand-logo" key={b.file}><img src={`./Asset/svg/brand/${b.file}`} alt={copy ? '' : b.name} title={b.name} width="150" height="60" loading="lazy" draggable="false"/></div>)}</div>)}</div>}
+    </div></Reveal>;
+}
+
+function Portfolio({ onProject }) {
+  const [category, setCategory] = useState('All');
+  const [query, setQuery] = useState('');
+  const [expanded, setExpanded] = useState(false);
+  const [limit, setLimit] = useState(9);
+  const results = archive.filter(p => (category === 'All' || p.category === category) && `${p.title} ${p.category} ${p.role}`.toLowerCase().includes(query.toLowerCase()));
+  const projects = expanded || category !== 'All' || query ? results.slice(0, limit) : featured;
+  return <section id="portfolio" className="portfolio section-wrap">
+    <Reveal className="section-heading"><div><span className="eyebrow">01 / PORTFOLIO</span><h2>DESIGN WORK<span className="accent">.</span></h2></div><button className="text-link" onClick={() => { if (expanded) { setExpanded(false); setCategory('All'); setQuery(''); } else { setExpanded(true); setLimit(9); } }}>{expanded ? 'FEATURED WORK' : 'ALL WORK'}<ArrowRight size={21}/></button></Reveal>
+    <Reveal className="portfolio-toolbar">
+      <div className="filters" role="group" aria-label="Work categories">
+        {categories.map(c => <button key={c} className={category === c ? 'selected' : ''} aria-pressed={category === c} onClick={() => { setCategory(c); setExpanded(true); setLimit(9); }}>{c}{c === category && <motion.span className="filter-line" layoutId="filter-line"/>}</button>)}
+      </div>
+      <label className="search-box"><Search size={15}/><span>Search</span><input aria-label="Search work" type="search" placeholder="Project title or category…" value={query} onChange={e => { setQuery(e.target.value); setExpanded(true); setLimit(9); }}/></label>
+    </Reveal>
+    <motion.div className="project-grid" layout><AnimatePresence mode="popLayout">{projects.map((p, i) => <ProjectCard key={p.category + p.title + p.media} project={p} index={i} onOpen={onProject}/>)}</AnimatePresence></motion.div>
+    {projects.length === 0 && <div className="empty-state"><p>Selected work is available on Behance.</p><a className="text-link" href={portfolioUrl} target="_blank" rel="noopener noreferrer">Open my portfolio <ArrowUpRight size={15}/></a></div>}
+    {expanded && results.length > limit && <div className="load-more"><button className="outline-button" onClick={() => setLimit(v => v + 9)}>Tampilkan karya lainnya <Plus size={16}/></button><span>{projects.length} dari {results.length} karya</span></div>}
+    {brands.length > 0 && <BrandStrip/>}
+  </section>;
+}
+
+const processSteps = [
+  ['01', 'GRAPHIC DESIGN', 'Graphic design and expertise in design software.'],
+  ['02', 'ADOBE SOFTWARE', 'Adobe Illustrator, Photoshop and After Effects.'],
+  ['03', '2D DESIGN', '2D design.'],
+  ['04', '3D DESIGN', '3D design and Blender.'],
+  ['05', 'SOFTWARE', 'AutoCAD, Microsoft Office and SketchUp.'],
+];
+function Breakdown() {
+  const scene = featured.find(p => p.type === 'render');
+  const ref = useRef(null);
+  const enabled = useContext(MotionContext);
+  const [manual, setManual] = useState(false);
+  const [cut, setCut] = useState(65);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start end', 'end start'] });
+  useMotionValueEvent(scrollYProgress, 'change', v => { if (!manual && enabled) setCut(Math.round(90 - v * 80)); });
+  const titleX = useTransform(scrollYProgress, [0, 1], [30, -30]);
+  if (!scene) return null;
+  const resize = url => url.replace('/upload/', '/upload/c_scale,w_1200,q_auto,f_auto/');
+  return <section className="breakdown section-wrap" ref={ref} aria-labelledby="breakdown-title"><Reveal className="breakdown-copy"><span className="eyebrow">A LOOK UNDER THE SURFACE</span><motion.h2 id="breakdown-title" className="display" style={enabled ? { x: titleX } : {}}>FROM RAW.<br/><span className="accent">TO REAL.</span></motion.h2><p>Satu scene. Berlapis proses.<br/>Lihat bagaimana sebuah 3D environment berubah dari bentuk dasar menjadi dunia yang hidup.</p><span className="breakdown-credit">CYBERPUNK ENVIRONMENT / 2025<br/>3D ARTIST · LIGHTING · RENDERING</span></Reveal><Reveal className="comparison"><div className="comparison-stage" style={{'--cut': `${enabled || manual ? cut : 50}%`}}><MediaImage src={resize(scene.renders[0].solid)} alt="Cyberpunk environment sebelum material dan pencahayaan"/><div className="comparison-final"><MediaImage src={resize(scene.renders[0].final)} alt="Cyberpunk environment hasil render akhir"/></div><span className="comparison-label raw-label">SOLID VIEW</span><span className="comparison-label final-label">FINAL RENDER</span><div className="comparison-divider"><span><ChevronLeft size={14}/><ChevronRight size={14}/></span></div><input aria-label="Perbandingan sebelum dan sesudah render" aria-valuetext={`${cut}% solid, ${100-cut}% final render`} type="range" min="0" max="100" value={cut} onChange={e => { setManual(true); setCut(Number(e.target.value)); }}/></div><div className="comparison-caption"><span>GESER UNTUK MELIHAT PROSESNYA</span><span>DRAG / SCROLL</span></div></Reveal></section>;
+}
+function About() {
+  const enabled = useContext(MotionContext);
+  const ref = useRef(null);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ['start 75%', 'end 75%'] });
+  return <section id="about" className="about section-wrap" ref={ref}>
+    <Reveal className="about-lead"><div><span className="eyebrow">PROFILE / HAMZA</span><h2 className="display">GRAPHIC DESIGN.<br/>2D & <span className="accent">3D DESIGN.</span></h2></div><p>Expert in graphic design software including Adobe Illustrator, Photoshop and After Effects. Also experienced in 2D and 3D design with Blender.</p></Reveal>
+    <div className="studio-grid">
+      <Reveal className="education-panel"><h3 className="panel-heading">EDUCATION & SKILLS</h3><p className="eyebrow accent">EDUCATION</p><div className="education-row"><strong>University</strong><span>2021</span></div><div className="education-row"><strong>Intermediate</strong><span>2017</span></div><div className="education-row"><strong>College</strong><span>2015</span></div><p className="eyebrow accent skills-heading">DESIGN SKILLS & SOFTWARE</p><div className="skill-tags">{['Graphic Design', '2D Design', '3D Design', 'Adobe Illustrator', 'Adobe Photoshop', 'Adobe After Effects', 'Blender', 'AutoCAD', 'Microsoft Office', 'SketchUp'].map(s => <span key={s}>{s}</span>)}</div><div className="software-row">{[['ai', 'Adobe Illustrator'], ['ps', 'Adobe Photoshop'], ['ae', 'Adobe After Effects'], ['bl', 'Blender']].map(([file, name]) => <img key={file} src={`./Asset/svg/${file}.svg`} alt={name} title={name} loading="lazy" width="28" height="28"/>)}</div></Reveal>
+      <div className="process-panel"><Reveal><h3 className="panel-heading">SKILLS & SOFTWARE</h3></Reveal><div className="process-list"><div className="process-track"><motion.div style={{ scaleY: enabled ? scrollYProgress : 1 }}/></div>{processSteps.map(([num, title, text], i) => <Reveal key={num} className="process-row" delay={i * 0.035}><span className="process-num display">{num}</span><span className="process-node"/><div><h4>{title}</h4><p>{text}</p></div></Reveal>)}</div></div>
+      <Reveal className="quote-panel"><span className="quote-mark display">“</span><blockquote>Graphic design,<br/>2D & 3D design,<br/><em>creative software<br/>and Blender.</em></blockquote><span className="handwriting">Hamza</span><div className="quote-bottom">DESIGN /<br/>3D / GRAPHICS<span className="quote-symbol" aria-hidden="true">✳</span></div></Reveal>
+    </div>
+  </section>;
+}
+
+function Journey() {
+  const [open, setOpen] = useState(0);
+  return <section id="experience" className="journey section-wrap">
+    <Reveal className="section-heading"><div><span className="eyebrow">03 / EXPERIENCE</span><h2>DESIGNING. BUILDING. <span className="accent">GROWING.</span></h2></div><a className="text-link" href="./Asset/cv/Hamza-Resume.pdf" download>RESUME<Download size={16}/></a></Reveal>
+    <div className="journey-grid"><div className="experience-list">{experiences.map((job, i) => <Reveal className={`experience-row ${open === i ? 'is-open' : ''}`} key={job.place}><button aria-expanded={open === i} aria-controls={`job-${i}`} onClick={() => setOpen(open === i ? null : i)}><span className="experience-date">{job.date}</span><span><h3>{job.title}</h3><span className="experience-place">{job.place}</span></span>{open === i ? <Minus size={18}/> : <Plus size={18}/>}</button><AnimatePresence initial={false}>{open === i && <motion.div id={`job-${i}`} initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.35, ease: EASE }}><p>{job.text}</p></motion.div>}</AnimatePresence></Reveal>)}</div>
+      <Reveal className="awards-panel"><p className="eyebrow">LANGUAGES</p><h3 className="display">ENGLISH.<br/><span className="accent">URDU. ARABIC.</span></h3><div className="award-list">{languages.map((language, i) => <div className="education-row" key={language}><strong>{String(i + 1).padStart(2, '0')} · {language}</strong></div>)}</div></Reveal></div>
+  </section>;
+}
+
+function Contact() {
+  const [sent, setSent] = useState(false);
+  const send = e => {
+    e.preventDefault();
+    const data = new FormData(e.currentTarget);
+    const text = `Hello Hamza, my name is ${data.get('name')}.\n\nProject type: ${data.get('type')}\n${data.get('message')}`;
+    window.open(`mailto:${emailAddress}?subject=${encodeURIComponent('Portfolio enquiry')}&body=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
+    setSent(true);
+  };
+  return <section id="contact" className="contact section-wrap">
+      <div className="contact-grid"><Reveal className="contact-intro"><span className="eyebrow">04 / GET IN TOUCH</span><h2 className="display">LET’S WORK<br/>TOGETHER<span className="accent">.</span></h2><p>For graphic design, 2D and 3D design enquiries.</p><Magnetic href={`mailto:${emailAddress}`} className="contact-cta"><span className="round-arrow"><ArrowUpRight size={21}/></span>EMAIL ME</Magnetic></Reveal>
+      <Reveal className="contact-links" delay={0.1}><a href={`mailto:${emailAddress}`}><Mail/><span><small>EMAIL</small>{emailAddress}</span><ArrowUpRight size={16}/></a><a href={portfolioUrl} target="_blank" rel="noopener noreferrer"><ExternalLink/><span><small>BEHANCE</small>behance.net/Hamza_Malik</span><ArrowUpRight size={16}/></a><a href={`tel:${phoneNumber}`}><Phone/><span><small>PHONE</small>+968 9497-8767</span><ArrowUpRight size={16}/></a><div><MapPin/><span><small>POSTAL ADDRESS</small>{postalAddress}</span></div></Reveal>
+      <Reveal className="contact-reel" delay={0.2}><a href={portfolioUrl} target="_blank" rel="noopener noreferrer" aria-label="Open Hamza’s Behance portfolio"><div className="reel-screen"><span className="reel-screen-top">HAMZA<span>DESIGN PORTFOLIO</span></span><MediaImage src="./Asset/img/hamza-cutout.png" alt="Hamza wearing a black suit and glasses"/><span className="reel-screen-title display">GRAPHIC<br/><span>3D DESIGN.</span></span><span className="play-circle"><ExternalLink size={18}/></span></div><span className="reel-caption">VIEW PROJECTS ON BEHANCE.</span></a></Reveal></div>
+    <Reveal><details className="project-brief"><summary>Tell me about your project <Plus size={19}/></summary><form onSubmit={send}><label>Your name<input name="name" required placeholder="Name" autoComplete="name" maxLength="100"/></label><label>Project type<select name="type"><option>Graphic Design</option><option>2D Design</option><option>3D Design</option><option>Other enquiry</option></select></label><label className="brief-message">Project details<textarea name="message" required rows="3" placeholder="Describe your design enquiry…" maxLength="3000"/></label><button className="solid-button" type="submit">Open email draft <ArrowUpRight size={18}/></button><p className="form-note" role="status">{sent ? 'Email draft opened. Review it and send from your mail app.' : 'This form opens a draft email for you to review and send.'}</p></form></details></Reveal>
+  </section>;
+}
+
+function ProjectDialog({ project, onClose }) {
+  const ref = useRef(null);
+  const [renderMode, setRenderMode] = useState('final');
+  const [shot, setShot] = useState(0);
+  const [mediaLoaded, setMediaLoaded] = useState(false);
+  const [mediaFailed, setMediaFailed] = useState(false);
+  const [retried, setRetried] = useState(0);
+  const enabled = useContext(MotionContext);
+  const activeShot = project.type === 'render' ? project.renders[shot] : null;
+  const embedType = activeShot?.video ? 'youtube' : activeShot?.drive ? 'drive' : project.type;
+  const embedMedia = activeShot?.video || activeShot?.drive?.match(/\/d\/([^/]+)/)?.[1] || project.media;
+  const isVideo = ['youtube', 'drive'].includes(embedType);
+  const availableModes = [['layout', 'Layout'], ['solid', 'Solid'], ['material', 'Material'], ['lighting', 'Lighting'], ['final', 'Final render']].filter(([mode]) => activeShot?.[mode] && !(mode === 'solid' && activeShot.hideSolidMode));
+  const effectiveMode = activeShot?.[renderMode] ? renderMode : availableModes[0]?.[0];
+  const rendered = activeShot?.[effectiveMode] || activeShot?.image || project.image;
+  const sourceUrl = embedType === 'youtube' ? `https://www.youtube.com/watch?v=${embedMedia}` : embedType === 'drive' ? `https://drive.google.com/file/d/${embedMedia}/view` : project.type === 'render' ? rendered : project.media || project.image;
+  const changeShot = next => { setMediaLoaded(false); setMediaFailed(false); setShot(next); };
+  useEffect(() => {
+    const previous = document.activeElement;
+    const old = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    ref.current?.focus();
+    const listener = e => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'Tab') {
+        const nodes = [...ref.current.querySelectorAll('button, a[href], input, select, textarea, iframe')].filter(n => !n.disabled && n.getClientRects().length);
+        const first = nodes[0]; const last = nodes.at(-1);
+        if (e.shiftKey && (document.activeElement === first || document.activeElement === ref.current)) { e.preventDefault(); last?.focus(); }
+        else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first?.focus(); }
+      }
+    };
+    window.addEventListener('keydown', listener);
+    return () => { document.body.style.overflow = old; window.removeEventListener('keydown', listener); previous?.focus(); };
+  }, [onClose]);
+  useEffect(() => {
+    if (!isVideo) return;
+    const timer = setTimeout(() => { if (!mediaLoaded) setMediaFailed(true); }, 14000);
+    return () => clearTimeout(timer);
+  }, [mediaLoaded, retried, isVideo, embedMedia]);
+  return <motion.div className="dialog-backdrop" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <motion.div ref={ref} className="project-dialog" role="dialog" aria-modal="true" aria-labelledby="dialog-title" tabIndex="-1" initial={enabled ? { y: 45, scale: 0.97 } : false} animate={{ y: 0, scale: 1 }} exit={{ y: 20, opacity: 0 }} transition={{ duration: 0.35, ease: EASE }}>
+      <div className="dialog-heading"><span className="eyebrow">{project.category} {project.year && ` / ${project.year}`}</span><button onClick={onClose} className="icon-button" aria-label="Tutup karya"><X/></button></div>
+      <div className={`dialog-media ${!isVideo ? 'still' : ''}`}>
+        {isVideo ? <>{!mediaLoaded && <div className="media-loading" role="status">{mediaFailed ? <><p>Preview belum bisa dimuat. Buka sumber aslinya untuk menonton.</p><button className="outline-button" onClick={() => { setMediaFailed(false); setMediaLoaded(false); setRetried(v => v + 1); }}>Coba lagi</button></> : <><span className={enabled ? 'loading-ring' : 'loading-ring paused'}/><p>Memuat film…</p></>}</div>}<iframe key={`${embedMedia}-${retried}`} src={embedType === 'youtube' ? `https://www.youtube-nocookie.com/embed/${embedMedia}?autoplay=1&rel=0` : `https://drive.google.com/file/d/${embedMedia}/preview`} title={project.title} width="1280" height="720" allow="autoplay; encrypted-media; fullscreen; picture-in-picture" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen onLoad={() => { setMediaLoaded(true); setMediaFailed(false); }} onError={() => setMediaFailed(true)}/></> : <MediaImage src={rendered} alt={project.title} priority/>}
+      </div>
+      {project.type === 'render' && (availableModes.length > 0 || project.renders.length > 1) && <div className="render-controls"><div role="group" aria-label="Tahap render">{availableModes.map(([mode, label]) => <button key={mode} className={effectiveMode === mode ? 'selected' : ''} onClick={() => setRenderMode(mode)} aria-pressed={effectiveMode === mode}>{label}</button>)}</div>{project.renders.length > 1 && <div className="shot-controls"><button className="icon-button" aria-label="Shot sebelumnya" onClick={() => changeShot((shot - 1 + project.renders.length) % project.renders.length)}><ChevronLeft/></button><span>SHOT {shot + 1} / {project.renders.length}</span><button className="icon-button" aria-label="Shot selanjutnya" onClick={() => changeShot((shot + 1) % project.renders.length)}><ChevronRight/></button></div>}</div>}
+      <div className="dialog-description"><div><h2 id="dialog-title">{project.title}</h2>{project.role && <span className="accent">{project.role}</span>}<p>{project.description}</p></div>{sourceUrl && <a className="outline-button" href={sourceUrl} target="_blank" rel="noopener noreferrer">{project.type === 'website' ? 'Kunjungi website' : 'Buka sumber asli'}<ExternalLink size={15}/></a>}</div>
+      {isVideo && <p className="embed-note">Jika video dibatasi oleh pemiliknya, gunakan “Buka sumber asli”.</p>}
+    </motion.div>
+  </motion.div>;
+}
+
+function App() {
+  const reduced = useReducedMotion();
+  const [motionOn, setMotionOn] = useState(() => { try { return localStorage.getItem('hamza-motion') !== 'off'; } catch { return true; } });
+  const enabled = motionOn && !reduced;
+  const [project, setProject] = useState(null);
+  const { scrollYProgress } = useScroll();
+  const progress = useSpring(scrollYProgress, { stiffness: 100, damping: 28, restDelta: 0.001 });
+  useEffect(() => { document.documentElement.dataset.motion = enabled ? 'on' : 'off'; }, [enabled]);
+  const toggle = () => { setMotionOn(!motionOn); try { localStorage.setItem('hamza-motion', motionOn ? 'off' : 'on'); } catch {} };
+  const close = React.useCallback(() => setProject(null), []);
+  return <MotionContext.Provider value={enabled}>
+    <MotionConfig reducedMotion={enabled ? 'user' : 'always'} transition={{ ease: EASE }}>
+      <a className="skip-link" href="#portfolio">Skip to work</a>
+      <motion.div className="reading-progress" style={{ scaleX: enabled ? progress : scrollYProgress }}/>
+      <Header enabled={enabled} onToggle={toggle}/>
+      <main>
+        <Hero/>
+        <Portfolio onProject={setProject}/>
+        <About/>
+        <Journey/>
+        <Contact/>
+      </main>
+      <footer className="footer">
+        <a className="wordmark" href="#home">HAMZA</a>
+        <span>© {new Date().getFullYear()} HAMZA · 3D & GRAPHICS DESIGNER.</span>
+        <div>
+          <a href={portfolioUrl} target="_blank" rel="noopener noreferrer" aria-label="Behance Hamza Malik"><ExternalLink size={17}/></a>
+          <a href={`mailto:${emailAddress}`} aria-label="Email Hamza"><Mail size={17}/></a>
+          <a href="#home" aria-label="Back to top"><ArrowUpRight size={18}/></a>
+        </div>
+      </footer>
+      <AnimatePresence>{project && <ProjectDialog key={project.title} project={project} onClose={close}/>}</AnimatePresence>
+    </MotionConfig>
+  </MotionContext.Provider>;
+}
+
+createRoot(document.getElementById('root')).render(<App/>);

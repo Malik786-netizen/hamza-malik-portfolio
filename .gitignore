@@ -1,0 +1,20 @@
+node_modules/
+.git-upload/
+tmp/
+share-ready/
+Microsoft.Services.Store.winmd
+hamza.jpeg
+Confident Man in Black Suit Cutout.png
+Asset/img/hamza-portrait.jpeg
+Asset/img/renando-portrait.png
+Asset/cv/Renando_Editor_VFX.pdf.pdf
+Asset/data/
+Asset/img/SERTIFIKAT/
+Asset/img/gwe.jpeg
+Asset/dist/*.map
+Asset/svg/*
+!Asset/svg/ai.svg
+!Asset/svg/ps.svg
+!Asset/svg/ae.svg
+!Asset/svg/bl.svg
+Asset/svg/brand/
