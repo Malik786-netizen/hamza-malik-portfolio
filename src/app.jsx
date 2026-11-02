@@ -163,13 +163,13 @@ function Portfolio({ onProject }) {
 
 function PrintServices() {
   const services = [
-    { number: '01', title: 'PRINTED GIFT ITEMS', icon: Gift, text: 'Add a personal touch to gifts with custom printing for keepsakes and special occasions.', tags: ['Personalised gifts', 'Gift packaging', 'Special occasions'] },
-    { number: '02', title: 'CUSTOM STICKERS', icon: Tags, text: 'Custom-printed stickers for product labels, packaging, promotions and events.', tags: ['Product labels', 'Packaging', 'Promotions'] },
+    { number: '01', title: 'PRINTED GIFT ITEMS', icon: Gift, text: 'Add a personal touch to gifts with custom printing for keepsakes and special occasions.', tags: ['Personalised gifts', 'Gift packaging', 'Trophies'], images: [{ src: './Asset/img/print-trophy.jpg', alt: 'Gold trophy with medals on a red background', credit: 'RDNE Stock project', href: 'https://www.pexels.com/photo/medals-tied-on-a-trophy-7005693/' }, { src: './Asset/img/print-gift-boxes.jpg', alt: 'Red ribbon gift box beside shopping bags', credit: 'Tamanna Rumee', href: 'https://www.pexels.com/photo/a-box-wrapped-in-red-ribbon-beside-the-paper-bags-7986138/' }] },
+    { number: '02', title: 'CUSTOM STICKERS', icon: Tags, text: 'Custom-printed stickers for product labels, packaging, promotions and events.', tags: ['Kids stickers', 'Product labels', 'Packaging'], images: [{ src: './Asset/img/kids-stickers.jpg', alt: 'Colorful celebration sticker sheets for crafts', credit: 'Mohamed hamdi', href: 'https://www.pexels.com/photo/sheets-with-stickers-16605271/' }] },
   ];
   return <section id="print-services" className="print-services section-wrap">
     <Reveal className="section-heading"><div><span className="eyebrow">02 / PRINT SERVICES</span><h2>DESIGNED TO <span className="accent">PRINT.</span></h2></div><span className="print-heading-note">GIFT ITEMS / CUSTOM STICKERS</span></Reveal>
     <Reveal className="print-intro"><p>Turn thoughtful ideas into tangible pieces with custom printing for gift items and stickers.</p></Reveal>
-    <div className="print-grid">{services.map(({ number, title, icon: Icon, text, tags }) => <Reveal className="print-card" key={title}><div className="print-card-top"><span className="print-card-number display">{number}</span><span className="print-card-icon"><Icon size={23} strokeWidth={1.5}/></span></div><h3>{title}</h3><p>{text}</p><div className="print-tags">{tags.map(tag => <span key={tag}>{tag}</span>)}</div></Reveal>)}</div>
+    <div className="print-grid">{services.map(({ number, title, icon: Icon, text, tags, images }) => <Reveal className="print-card" key={title}><div className={`print-card-images ${images.length > 1 ? 'print-card-images-pair' : ''}`}><span className="print-image-label">VISUAL EXAMPLES</span><div>{images.map(image => <figure key={image.src}><img src={image.src} alt={image.alt} loading="lazy"/><figcaption>Photo: <a href={image.href} target="_blank" rel="noopener noreferrer">{image.credit} / Pexels</a></figcaption></figure>)}</div></div><div className="print-card-top"><span className="print-card-number display">{number}</span><span className="print-card-icon"><Icon size={23} strokeWidth={1.5}/></span></div><h3>{title}</h3><p>{text}</p><div className="print-tags">{tags.map(tag => <span key={tag}>{tag}</span>)}</div></Reveal>)}</div>
   </section>;
 }
 
